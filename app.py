@@ -133,3 +133,4 @@ if uploaded:
         st.image(orig, caption="Original Image", use_column_width=True)
     with col2:
         st.image(cam_img, caption="Ensemble Grad-CAM", use_column_width=True)
+

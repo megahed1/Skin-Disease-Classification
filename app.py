@@ -253,51 +253,41 @@ def main():
 
     uploaded = st.file_uploader("Upload a skin image", type=["jpg", "jpeg", "png"])
 
-    if uploaded is not None:
+    if uploaded:
+        # --------- ⬇️ التعديل هنا فقط
         try:
-            # Read image bytes into OpenCV
-            image_bytes = uploaded.read()
-            img_arr = np.frombuffer(image_bytes, np.uint8)
-            img_bgr = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
-            if img_bgr is None:
-                raise ValueError("Uploaded file is not a valid image or is corrupted.")
-
-            # Show the uploaded image preview
-            st.subheader("Input Image")
-            st.image(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB), use_column_width=True)
-
-            # Preprocess
-            img_input = preprocess_image(img_bgr)
-
-            # Prediction with spinner
-            with st.spinner("Running ensemble prediction..."):
-                cls_idx, probs = ensemble_predict(models, img_input)
-
-            # Show results
-            st.subheader(f"Prediction: **{CLASS_NAMES[cls_idx]}**")
-            st.write("Probabilities:")
-            probs_1d = np.asarray(probs).reshape(-1)
-            prob_df = pd.DataFrame({"class": CLASS_NAMES, "probability": probs_1d})
-            st.table(prob_df.style.format({"probability": "{:.4f}"}))
-
-            # show colored bars
-            show_prob_bars(probs_1d, CLASS_NAMES)
-
-            # Grad-CAM with spinner
-            with st.spinner("Computing Grad-CAM explanation..."):
-                cam = ensemble_gradcam(models, img_input)
-
-            orig_rgb, cam_overlay = overlay_heatmap_on_image(img_bgr, cam, alpha=0.5)
-
-            st.markdown("**Grad-CAM Explanation**")
-            col1, col2 = st.columns(2)
-            col1.image(orig_rgb, caption="Original", use_column_width=True)
-            col2.image(cam_overlay, caption="Grad-CAM Overlay", use_column_width=True)
-
+            pil_img = Image.open(uploaded).convert("RGB")
+            img_rgb = np.array(pil_img)          # RGB
+            img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
         except Exception as e:
-            st.error(f"An error occurred while processing the image: {e}")
-            st.write("Please check logs for details.")
-            print("ERROR in app:", e)
+            st.error(f"Error reading image: {e}")
+            st.stop()
+        # ---------
+
+        st.subheader("Input Image")
+        st.image(img_rgb, use_column_width=True)
+
+        img_input = preprocess_image(img_rgb)
+
+        with st.spinner("Predicting..."):
+            cls_idx, probs = ensemble_predict(models, img_input)
+
+        st.subheader(f"Prediction: **{CLASS_NAMES[cls_idx]}**")
+        prob_df = pd.DataFrame({"class": CLASS_NAMES, "probability": probs})
+        st.table(prob_df)
+
+        show_prob_bars(probs, CLASS_NAMES)
+
+        with st.spinner("Grad-CAM..."):
+            cam = ensemble_gradcam(models, img_input)
+
+        orig, overlay = overlay_heatmap_on_image(img_rgb, cam)
+
+        st.subheader("Grad-CAM")
+        col1, col2 = st.columns(2)
+        col1.image(orig, caption="Original")
+        col2.image(overlay, caption="Grad-CAM Overlay")
+
 
 if __name__ == "__main__":
     main()

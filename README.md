@@ -76,7 +76,6 @@
 - [⚠️ Medical Disclaimer](#️-medical-disclaimer)
 - [🤝 Contributing](#-contributing)
 - [📜 License](#-license)
-- [👥 Team](#-team)
 - [🙏 Acknowledgments](#-acknowledgments)
 
 ---

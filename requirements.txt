@@ -1,6 +1,7 @@
 streamlit
-tensorflow-cpu==2.9.3
-numpy==1.23.5
-opencv-python-headless==4.7.0.72
+tensorflow
+gdown
+opencv-python-headless
+numpy
 matplotlib
 Pillow

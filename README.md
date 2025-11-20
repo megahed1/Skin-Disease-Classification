@@ -19,12 +19,11 @@ The final system is deployed as an interactive **Streamlit Web App**.
 
 ---
 
-**Models Link**
-DENSENET121_model = https://drive.google.com/file/d/1ZbNmoMJpT9yJ3tEFxEVBAfIAhrOnq8Dx/view?usp=sharing
+## Models Link
 
-DENSENET169_FT_model = https://drive.google.com/file/d/1NjR_7DlFqM75segwvexbCFqq0qNlN0NR/view?usp=sharing
-
-EFFNETB3_model = https://drive.google.com/file/d/1KU9JpiXdfW34A2L8y8Sxdz-wJbJdoQ79/view?usp=drive_link
+- **DENSENET121_model** = https://drive.google.com/file/d/1ZbNmoMJpT9yJ3tEFxEVBAfIAhrOnq8Dx/view?usp=sharing
+- **DENSENET169_FT_model** = https://drive.google.com/file/d/1NjR_7DlFqM75segwvexbCFqq0qNlN0NR/view?usp=sharing
+- **EFFNETB3_model** = https://drive.google.com/file/d/1KU9JpiXdfW34A2L8y8Sxdz-wJbJdoQ79/view?usp=drive_link
 
 ---
 

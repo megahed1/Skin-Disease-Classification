@@ -2,26 +2,48 @@ import streamlit as st
 import numpy as np
 import cv2
 import tensorflow as tf
-from tensorflow.keras.models import load_model
-import matplotlib.pyplot as plt
+import gdown
+import os
 
 # ==============================
-# 1) Load Models (Ensemble)
+# 0) Download Models from Google Drive
 # ==============================
-MODEL_121 = "models/DENSENET121_model.h5"
-MODEL_169 = "models/DENSENET169_FT_model.h5"
-MODEL_EFF = "models/EFFNETB3_model.h5"
 
-dense121 = load_model(MODEL_121, compile=False)
-dense169 = load_model(MODEL_169, compile=False)
-effnet   = load_model(MODEL_EFF, compile=False)
+MODEL_IDS = {
+    "dense121": "1ZbNmoMJpT9yJ3tEFxEVBAfIAhrOnq8Dx",
+    "dense169": "1NjR_7DlFqM75segwvexbCFqq0qNlN0NR",
+    "effnetb3": "1KU9JpiXdfW34A2L8y8Sxdz-wJbJdoQ79",
+}
 
+def download_models():
+    for name, file_id in MODEL_IDS.items():
+        filename = f"{name}.h5"
+        if not os.path.exists(filename):
+            st.write(f"⬇️ Downloading {filename}...")
+            url = f"https://drive.google.com/uc?export=download&id={file_id}"
+            gdown.download(url, filename, quiet=False, fuzzy=True)
+
+@st.cache_resource
+def load_models():
+    download_models()
+    m1 = tf.keras.models.load_model("dense121.h5", compile=False)
+    m2 = tf.keras.models.load_model("dense169.h5", compile=False)
+    m3 = tf.keras.models.load_model("effnetb3.h5", compile=False)
+    return m1, m2, m3
+
+
+dense121, dense169, effnet = load_models()
+
+
+# ==============================
+# 1) Constants
+# ==============================
 CLASS_NAMES = ["Eczema", "Psoriasis", "Benign Tumors", "Melanoma"]
 IMG_SIZE = 224
 
 
 # ==============================
-# 2) Image Preprocessing
+# 2) Preprocessing
 # ==============================
 def preprocess(img):
     img = cv2.resize(img, (IMG_SIZE, IMG_SIZE))
@@ -133,4 +155,3 @@ if uploaded:
         st.image(orig, caption="Original Image", use_column_width=True)
     with col2:
         st.image(cam_img, caption="Ensemble Grad-CAM", use_column_width=True)
-

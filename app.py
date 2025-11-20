@@ -8,6 +8,7 @@ import os
 import pandas as pd
 import altair as alt
 from io import BytesIO
+from PIL import Image
 
 # -----------------------------
 # CONFIG
@@ -22,6 +23,7 @@ MODEL_IDS = {
 
 CLASS_NAMES = ["Eczema", "Psoriasis", "Benign Tumors", "Melanoma"]
 IMG_SIZE = 224
+
 MODEL_FILENAMES = {
     "dense121": "dense121.h5",
     "dense169": "dense169.h5",
@@ -49,7 +51,6 @@ def download_from_drive(file_id: str, out_path: str):
 def load_models():
     # Ensure models folder exists
     os.makedirs("models", exist_ok=True)
-
     # Download if missing
     for key, fid in MODEL_IDS.items():
         out = os.path.join("models", MODEL_FILENAMES[key])
@@ -84,17 +85,18 @@ def preprocess_image(img_bgr):
 def ensure_vector(pred):
     """Ensure prediction is 1D vector (n_classes,) even if model returns (n,) or scalar."""
     arr = np.asarray(pred)
-    arr = np.squeeze(arr)             # remove batch dim if present
-    arr = np.atleast_1d(arr)          # ensure vector
+    arr = np.squeeze(arr)  # remove batch dim if present
+    arr = np.atleast_1d(arr)  # ensure vector
     return arr
 
 def ensemble_predict(models, img_array):
     """Return (predicted_class_index, probs_array_of_shape(n_classes,))"""
     dense121, dense169, effnet = models
+
     # get raw predictions
     p169 = ensure_vector(dense169.predict(img_array))
     p121 = ensure_vector(dense121.predict(img_array))
-    p50  = ensure_vector(effnet.predict(img_array))
+    p50 = ensure_vector(effnet.predict(img_array))
 
     # If lengths mismatch, try to align by taking min length (defensive)
     n = min(len(p169), len(p121), len(p50))
@@ -164,15 +166,15 @@ def robust_gradcam(model, img_array):
         grads = tape2.gradient(loss2, conv_outputs2)
         conv_outputs = conv_outputs2  # use the version from second tape
 
-        if grads is None:
-            raise RuntimeError("Gradients are None; cannot compute Grad-CAM for this model.")
+    if grads is None:
+        raise RuntimeError("Gradients are None; cannot compute Grad-CAM for this model.")
 
     # pooled grads and weighted sum
     pooled = tf.reduce_mean(grads, axis=(0, 1, 2))
     conv_out = conv_outputs[0]  # (H, W, C)
     heatmap = tf.reduce_sum(conv_out * pooled, axis=-1)
-    heatmap = tf.nn.relu(heatmap).numpy()
 
+    heatmap = tf.nn.relu(heatmap).numpy()
     if np.max(heatmap) != 0:
         heatmap = heatmap / (np.max(heatmap) + 1e-8)
     else:
@@ -185,11 +187,11 @@ def ensemble_gradcam(models, img_array):
 
     cam169 = robust_gradcam(dense169, img_array)
     cam121 = robust_gradcam(dense121, img_array)
-    cam3   = robust_gradcam(effnet, img_array)
+    cam3 = robust_gradcam(effnet, img_array)
 
     cam169_r = cv2.resize(cam169, (IMG_SIZE, IMG_SIZE))
     cam121_r = cv2.resize(cam121, (IMG_SIZE, IMG_SIZE))
-    cam3_r   = cv2.resize(cam3,   (IMG_SIZE, IMG_SIZE))
+    cam3_r = cv2.resize(cam3, (IMG_SIZE, IMG_SIZE))
 
     merged = 0.55 * cam169_r + 0.30 * cam121_r + 0.15 * cam3_r
     if merged.max() != 0:
@@ -234,8 +236,8 @@ def main():
     with st.sidebar:
         st.header("Instructions")
         st.write("""
-        1. Upload a clear image of the skin lesion.  
-        2. Wait for model download (first time).  
+        1. Upload a clear image of the skin lesion.
+        2. Wait for model download (first time).
         3. View prediction and Grad-CAM.
         """)
         st.markdown("---")
@@ -255,12 +257,17 @@ def main():
 
     if uploaded is not None:
         try:
-            # Read image bytes into OpenCV
-            image_bytes = uploaded.read()
-            img_arr = np.frombuffer(image_bytes, np.uint8)
-            img_bgr = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
-            if img_bgr is None:
-                raise ValueError("Uploaded file is not a valid image or is corrupted.")
+            # Read image using PIL to avoid OpenCV decode issues
+            try:
+                pil_img = Image.open(uploaded).convert("RGB")
+            except Exception as e:
+                st.error(f"Error reading image: {e}")
+                st.stop()
+                return
+
+            # Convert to NumPy RGB then to BGR to keep the rest of the code unchanged
+            img_rgb_np = np.array(pil_img)
+            img_bgr = cv2.cvtColor(img_rgb_np, cv2.COLOR_RGB2BGR)
 
             # Show the uploaded image preview
             st.subheader("Input Image")
@@ -279,7 +286,6 @@ def main():
             probs_1d = np.asarray(probs).reshape(-1)
             prob_df = pd.DataFrame({"class": CLASS_NAMES, "probability": probs_1d})
             st.table(prob_df.style.format({"probability": "{:.4f}"}))
-
             # show colored bars
             show_prob_bars(probs_1d, CLASS_NAMES)
 
@@ -288,7 +294,6 @@ def main():
                 cam = ensemble_gradcam(models, img_input)
 
             orig_rgb, cam_overlay = overlay_heatmap_on_image(img_bgr, cam, alpha=0.5)
-
             st.markdown("**Grad-CAM Explanation**")
             col1, col2 = st.columns(2)
             col1.image(orig_rgb, caption="Original", use_column_width=True)

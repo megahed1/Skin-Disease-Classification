@@ -3,5 +3,5 @@ tensorflow
 gdown
 opencv-python-headless
 numpy
-matplotlib
-Pillow
+pandas
+altair

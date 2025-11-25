@@ -55,31 +55,6 @@
 
 ---
 
-## 📋 **Table of Contents**
-
-- [🔍 Overview](#-overview)
-- [🌐 Live Demo](#-live-demo)
-- [🧠 Supported Classes](#-supported-classes)
-- [🚀 Key Features](#-key-features)
-  - [Ensemble Learning](#️-1-weighted-ensemble-learning)
-  - [Medical Image Preprocessing](#️-2-medical-grade-image-preprocessing)
-  - [Explainable AI (Grad-CAM)](#️-3-explainability--ensemble-grad-cam)
-  - [Streamlit Web App](#️-4-streamlit-web-app)
-- [🏗️ System Architecture](#️-system-architecture)
-- [📊 Model Performance](#-model-performance)
-- [📁 Project Structure](#-project-structure)
-- [⚙️ Installation & Setup](#️-installation--setup)
-- [🎯 Usage](#-usage)
-- [📦 Pre-trained Models](#-pre-trained-models)
-- [📚 Dataset](#-dataset)
-- [🔬 Technical Details](#-technical-details)
-- [⚠️ Medical Disclaimer](#️-medical-disclaimer)
-- [🤝 Contributing](#-contributing)
-- [📜 License](#-license)
-- [🙏 Acknowledgments](#-acknowledgments)
-
----
-
 ## 🔍 **Overview**
 
 This project implements a **production-ready medical AI system** for automated skin disease classification using state-of-the-art deep learning techniques:
